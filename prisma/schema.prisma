@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Todo {
+  id          String   @id @default(uuid())
+  description String
+  complete    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// si hay una tabla creada en prisma, para que se cree el schema solo se debe correr el comando 'npx prisma db push'
+// luego el comando 'npx prisma generate' para que se cree el cliente de prisma
+// si hacemos algun cambio y queremos que se refleje en la db debemos correr el comando 'npx prisma push' 
+// ya que si hacemos el migrate, va a borrar la tabla y la va a volver a crear, entonces se perderian los datos
+// model Employee {
+//   id        Int      @id @default(autoincrement())
+//   name      String   @db.VarChar
+//   isAdmin   Boolean  @default(true)
+//   createdAt DateTime @default(now()) @db.Timestamp(6)
+// }
