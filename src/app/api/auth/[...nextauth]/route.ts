@@ -5,7 +5,9 @@ import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 import { Adapter } from "next-auth/adapters";
-import async from '../../../../../../my-dashboard/src/app/dashboard/pokemons/pokemon/oooo/page';
+import CredentialsProvider from "next-auth/providers/credentials";
+import { signInEmailPassword } from "../actions/auth-actions";
+
 
 
 export const authOptions: NextAuthOptions = {
@@ -20,6 +22,26 @@ export const authOptions: NextAuthOptions = {
         GitHubProvider({
             clientId: process.env.GITHUB_ID ?? "",
             clientSecret: process.env.GITHUB_SECRET ?? "",
+        }),
+
+        CredentialsProvider({
+            name: 'Credentials',
+            credentials: {
+                email: {label: 'Email', type: 'email', placeholder: "user@mail.com"},
+                password: {label: 'Password', type: 'password', placeholder: "*********"}
+            },
+            async authorize(credentials, req) {
+                // Add logic here to look up the user from the credentials supplied
+                const user = await signInEmailPassword(credentials!.email, credentials!.password)
+          
+                if (user) {
+                  // Any object returned will be saved in `user` property of the JWT
+                  return user
+                }
+
+                return null
+              }
+        
         })
     ],
 
@@ -36,11 +58,16 @@ export const authOptions: NextAuthOptions = {
         async jwt({token, user, account, profile, }){
             const dbUser = await prisma.user.findUnique({where: {email: token.email ?? 'no-email'}})
             token.roles = dbUser?.roles ?? ['no-role']
-            token.id = dbUser?.id ?? ['no-id']
+            token.id = dbUser?.id ?? 'no-id'
             return token
         },
 
         async session({session, token, user}){
+            if (session && session.user) {
+                session.user.roles = token.roles
+                session.user.id = token.id
+            
+            }
             return session
         }
     }
