@@ -14,9 +14,10 @@ export const NewTodo = () => {
     const onSubmit = async (e:FormEvent) => {
         e.preventDefault()
         if ( description.trim() === '' ) return
-        await addTodo(description)
+        // await addTodo(description)
+        await createTodo(description)
+        router.refresh()
         setDescription('')
-        // router.refresh()
 
     }
 

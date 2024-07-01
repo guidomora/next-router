@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { boolean, object, string } from "yup"
+import { getUserSessionServer } from "../auth/actions/auth-actions"
 
 
 export async function GET(request: Request) {
@@ -34,11 +35,16 @@ const postSchema = object({
 
 
 export async function POST(request: Request) {
+    const user = await getUserSessionServer()
+
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     try {
         const { complete, description } = await postSchema.validate(await request.json()) // validamos el body con el esquema de validacion
 
         const todo = await prisma.todo.create({
-            data: { complete, description }
+            data: { complete, description, userId: user.id }
         })
         return NextResponse.json({ todo })
     } catch (error) {
